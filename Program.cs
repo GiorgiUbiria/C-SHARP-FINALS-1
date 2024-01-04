@@ -30,10 +30,31 @@ public class Program
 
     public static void StartBankingApplication(User user)
     {
-        // TODO: Implement the login and verification logic here
+        Console.WriteLine("Please enter your card number (16 digits):");
+        string cardNumber = Console.ReadLine();
+        Console.WriteLine("Please enter your card expiration date (MM/YY):");
+        string expirationDate = Console.ReadLine();
 
-        // If verification is successful, show the menu to the user
-        ShowMenu(user);
+        if (cardNumber == user.CardDetails.CardNumber && expirationDate == user.CardDetails.ExpirationDate)
+        {
+            Console.WriteLine("Please enter your pin code (4 digits):");
+            string pinCode = Console.ReadLine();
+
+            if (pinCode == user.CardDetails.PinCode)
+            {
+                ShowMenu(user);
+            }
+            else
+            {
+                Console.WriteLine("Incorrect pin code. The application will exit.");
+                Environment.Exit(0);
+            }
+        }
+        else
+        {
+            Console.WriteLine("Incorrect card number or expiration date. The application will exit.");
+            Environment.Exit(0);
+        }
     }
 
     public static void ShowMenu(User user)

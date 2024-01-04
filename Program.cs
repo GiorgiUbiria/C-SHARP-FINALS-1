@@ -8,18 +8,17 @@ public class Program
 {
     public static void Main()
     {
-        string jsonFilePath = "user.json"; // NOTE: creates the user.json file in bin/Debug/net8.0
 
-        if (File.Exists(jsonFilePath))
+        if (File.Exists(Globals.jsonFilePath))
         {
-            string json = File.ReadAllText(jsonFilePath);
+            string json = File.ReadAllText(Globals.jsonFilePath);
             User user = JsonConvert.DeserializeObject<User>(json);
 
             StartBankingApplication(user);
         }
         else
         {
-            Prompt(jsonFilePath);
+            Prompt();
         }
     }
 
@@ -78,19 +77,12 @@ public class Program
                 ShowMenu(user);
                 break;
             case "4":
-                if (user.CashIn())
-                {
-                    Console.WriteLine($"Your new balance is {user.GetBalance()} GEL.");
-                    ShowMenu(user);
-                }
-                else
-                {
-                    Console.WriteLine("Invalid input. Please enter a positive decimal number.");
-                    ShowMenu(user);
-                }
+                user.CashIn();
+                ShowMenu(user);
                 break;
             case "5":
-                // TODO: Implement the change pin code logic here
+                user.ChangePinCode();
+                ShowMenu(user);
                 break;
             case "6":
                 // TODO: Implement the convert currency logic here
@@ -102,7 +94,7 @@ public class Program
         }
     }
 
-    public static void Prompt(string jsonFilePath)
+    public static void Prompt()
     {
             Console.WriteLine("Welcome to the banking application. Please create an account.");
 
@@ -125,12 +117,14 @@ public class Program
             string pinCode = Console.ReadLine();
 
             CardDetails cardDetails = new CardDetails(cardNumber, expirationDate, cvc, pinCode);
+            Console.WriteLine(cardDetails);
 
             User user = new User(firstName, lastName, cardDetails);
             
             string userJson = JsonConvert.SerializeObject(user);
+            Console.WriteLine(userJson);
 
-            File.WriteAllText(jsonFilePath, userJson);
+            File.WriteAllText(Globals.jsonFilePath, userJson);
 
             StartBankingApplication(user);
     }

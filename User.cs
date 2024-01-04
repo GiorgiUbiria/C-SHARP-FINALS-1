@@ -6,10 +6,15 @@ namespace Finals;
 
 public class User
 {
+    [JsonProperty("FirstName")]
     private string FirstName { get; set; }
+    [JsonProperty("LastName")]
     private string LastName { get; set; }
+    [JsonProperty("Balance")]
     private decimal Balance { get; set; }
+    [JsonProperty("CardDetails")]
     private CardDetails CardDetails { get; set; }
+    [JsonProperty("TransactionHistory")]
     private List<Transactions> TransactionHistory { get; set; }
 
     public User(string firstName, string lastName, CardDetails cardDetails)
@@ -21,6 +26,16 @@ public class User
         TransactionHistory = new List<Transactions>();
     }
 
+    public void ChangePinCode()
+    {
+        Console.WriteLine("Enter the new pin code: ");
+        string newPinCode = Console.ReadLine();
+        string oldPinCode = this.CardDetails.getPinCode();
+        this.CardDetails.setPinCode(newPinCode);
+        string userJson = JsonConvert.SerializeObject(this);
+        File.WriteAllText(Globals.jsonFilePath, userJson);
+        Console.WriteLine($"Your pin code has changed from {oldPinCode} to {this.CardDetails.getPinCode()}");
+    }
     public void GetLastFiveTransactions()
     {
         var lastFiveTransactions = this.TransactionHistory.TakeLast(5);
@@ -45,7 +60,7 @@ public class User
 
     public bool CheckCardGeneralInformation(string cardNumber, string expirationDate)
     {
-        if (cardNumber == this.CardDetails.CardNumber && expirationDate == this.CardDetails.ExpirationDate)
+        if (cardNumber == this.CardDetails.getCardNumber() && expirationDate == this.CardDetails.getExpirationDate())
         {
             return true;
         }
@@ -57,7 +72,7 @@ public class User
 
     public bool CheckCardPinCode(string pinCode)
     {
-        if (pinCode == this.CardDetails.PinCode)
+        if (pinCode == this.CardDetails.getPinCode())
         {
             return true;
         }
@@ -67,7 +82,7 @@ public class User
         }
     }
 
-    public bool CashIn()
+    public void CashIn()
     {
         Console.WriteLine("Enter the currency type you want to cash in, such as GEL, USD, or EUR:");
         string currencyType = Console.ReadLine().ToUpper();
@@ -101,22 +116,18 @@ public class User
                 Transactions transaction = new Transactions(DateTime.Now, "Cash in", amountGEL, amountUSD, amountEUR);
 
                 this.TransactionHistory.Add(transaction);
-
                 string userJson = JsonConvert.SerializeObject(this);
-
-                File.WriteAllText("user.json", userJson);
-                Console.WriteLine($"You have successfully cashed in {amount} {currencyType}.");
-                return true;
+                File.WriteAllText(Globals.jsonFilePath, userJson);
+                Console.WriteLine($"Your new balance is {this.Balance} GEL.");
             }
             else
             {
-                return false;
+                Console.WriteLine("Invalid number. Please enter the positive decimal!");
             }
         }
         else
         {
             Console.WriteLine("Ivalind Currency!");
-            return false;
         }
     }
 }

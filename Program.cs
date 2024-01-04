@@ -19,46 +19,7 @@ public class Program
         }
         else
         {
-            Console.WriteLine("Welcome to the banking application. Please create an account.");
-
-            Console.WriteLine("Enter your first name:");
-            string firstName = Console.ReadLine();
-
-            Console.WriteLine("Enter your last name:");
-            string lastName = Console.ReadLine();
-
-            Console.WriteLine("Enter your card number (16 digits):");
-            string cardNumber = Console.ReadLine();
-
-            Console.WriteLine("Enter your card expiration date (MM/YY):");
-            string expirationDate = Console.ReadLine();
-
-            Console.WriteLine("Enter your CVC (3 digits):");
-            string cvc = Console.ReadLine();
-
-            Console.WriteLine("Enter your pin code (4 digits):");
-            string pinCode = Console.ReadLine();
-
-            User user = new User
-            {
-                FirstName = firstName,
-                LastName = lastName,
-                Balance = 0,
-                CardDetails = new CardDetails
-                {
-                    CardNumber = cardNumber,
-                    ExpirationDate = expirationDate,
-                    CVC = cvc,
-                    PinCode = pinCode
-                },
-                TransactionHistory = new List<Transactions>()
-            };
-
-            string userJson = JsonConvert.SerializeObject(user);
-
-            File.WriteAllText(jsonFilePath, userJson);
-
-            StartBankingApplication(user);
+            Prompt(jsonFilePath);
         }
     }
 
@@ -69,12 +30,12 @@ public class Program
         Console.WriteLine("Please enter your card expiration date (MM/YY):");
         string expirationDate = Console.ReadLine();
 
-        if (cardNumber == user.CardDetails.CardNumber && expirationDate == user.CardDetails.ExpirationDate)
+        if (user.CheckCardGeneralInformation(cardNumber, expirationDate))
         {
             Console.WriteLine("Please enter your pin code (4 digits):");
             string pinCode = Console.ReadLine();
 
-            if (pinCode == user.CardDetails.PinCode)
+            if (user.CheckCardPinCode(pinCode))
             {
                 ShowMenu(user);
             }
@@ -106,18 +67,27 @@ public class Program
         switch (option)
         {
             case "1":
-                Console.WriteLine($"Your balance is {user.Balance} GEL.");
+                Console.WriteLine($"Your balance is {user.GetBalance()} GEL.");
                 ShowMenu(user);
                 break;
             case "2":
                 // TODO: Implement the cash out logic here
                 break;
             case "3":
-                user.getLastFiveTransactions();
+                user.GetLastFiveTransactions();
                 ShowMenu(user);
                 break;
             case "4":
-                // TODO: Implement the cash in logic here
+                if (user.CashIn())
+                {
+                    Console.WriteLine($"Your new balance is {user.GetBalance()} GEL.");
+                    ShowMenu(user);
+                }
+                else
+                {
+                    Console.WriteLine("Invalid input. Please enter a positive decimal number.");
+                    ShowMenu(user);
+                }
                 break;
             case "5":
                 // TODO: Implement the change pin code logic here
@@ -130,5 +100,38 @@ public class Program
                 ShowMenu(user);
                 break;
         }
+    }
+
+    public static void Prompt(string jsonFilePath)
+    {
+            Console.WriteLine("Welcome to the banking application. Please create an account.");
+
+            Console.WriteLine("Enter your first name:");
+            string firstName = Console.ReadLine();
+
+            Console.WriteLine("Enter your last name:");
+            string lastName = Console.ReadLine();
+
+            Console.WriteLine("Enter your card number (16 digits):");
+            string cardNumber = Console.ReadLine();
+
+            Console.WriteLine("Enter your card expiration date (MM/YY):");
+            string expirationDate = Console.ReadLine();
+
+            Console.WriteLine("Enter your CVC (3 digits):");
+            string cvc = Console.ReadLine();
+
+            Console.WriteLine("Enter your pin code (4 digits):");
+            string pinCode = Console.ReadLine();
+
+            CardDetails cardDetails = new CardDetails(cardNumber, expirationDate, cvc, pinCode);
+
+            User user = new User(firstName, lastName, cardDetails);
+            
+            string userJson = JsonConvert.SerializeObject(user);
+
+            File.WriteAllText(jsonFilePath, userJson);
+
+            StartBankingApplication(user);
     }
 }

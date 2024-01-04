@@ -9,23 +9,57 @@ public class Program
 {
     public static void Main()
     {
-        // Initialize a new user
-        User user = new User
-        {
-            FirstName = "John",
-            LastName = "Doe",
-            CardDetails = new CardDetails
-            {
-                CardNumber = "1234-5678-9012-3456",
-                ExpirationDate = "12/25",
-                CVC = "123",
-                PinCode = "1234"
-            },
-            TransactionHistory = new List<Transaction>()
-        };
+        string jsonFilePath = "user.json"; // NOTE: creates the user.json file in bin/Debug/net8.0
 
-        // Start the banking application
-        StartBankingApplication(user);
+        if (File.Exists(jsonFilePath))
+        {
+            string json = File.ReadAllText(jsonFilePath);
+            User user = JsonConvert.DeserializeObject<User>(json);
+
+            StartBankingApplication(user);
+        }
+        else
+        {
+            Console.WriteLine("Welcome to the banking application. Please create an account.");
+
+            Console.WriteLine("Enter your first name:");
+            string firstName = Console.ReadLine();
+
+            Console.WriteLine("Enter your last name:");
+            string lastName = Console.ReadLine();
+
+            Console.WriteLine("Enter your card number (16 digits):");
+            string cardNumber = Console.ReadLine();
+
+            Console.WriteLine("Enter your card expiration date (MM/YY):");
+            string expirationDate = Console.ReadLine();
+
+            Console.WriteLine("Enter your CVC (3 digits):");
+            string cvc = Console.ReadLine();
+
+            Console.WriteLine("Enter your pin code (4 digits):");
+            string pinCode = Console.ReadLine();
+
+            User user = new User
+            {
+                FirstName = firstName,
+                LastName = lastName,
+                CardDetails = new CardDetails
+                {
+                    CardNumber = cardNumber,
+                    ExpirationDate = expirationDate,
+                    CVC = cvc,
+                    PinCode = pinCode
+                },
+                TransactionHistory = new List<Transaction>()
+            };
+
+            string userJson = JsonConvert.SerializeObject(user);
+
+            File.WriteAllText(jsonFilePath, userJson);
+
+            StartBankingApplication(user);
+        }
     }
 
     public static void StartBankingApplication(User user)

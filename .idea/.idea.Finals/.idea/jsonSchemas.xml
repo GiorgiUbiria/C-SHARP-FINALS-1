@@ -3,11 +3,11 @@
   <component name="JsonSchemaMappingsProjectConfiguration">
     <state>
       <map>
-        <entry key="Prettier">
+        <entry key="ESLint">
           <value>
             <SchemaInfo>
-              <option name="name" value="Prettier" />
-              <option name="relativePathToSchema" value="http://json.schemastore.org/prettierrc" />
+              <option name="name" value="ESLint" />
+              <option name="relativePathToSchema" value="http://json.schemastore.org/eslintrc" />
               <option name="applicationDefined" value="true" />
               <option name="patterns">
                 <list>

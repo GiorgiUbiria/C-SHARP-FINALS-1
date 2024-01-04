@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Transactions;
 using Finals;
 using Newtonsoft.Json; // Nuget Package
 
@@ -44,6 +43,7 @@ public class Program
             {
                 FirstName = firstName,
                 LastName = lastName,
+                Balance = 0,
                 CardDetails = new CardDetails
                 {
                     CardNumber = cardNumber,
@@ -51,7 +51,7 @@ public class Program
                     CVC = cvc,
                     PinCode = pinCode
                 },
-                TransactionHistory = new List<Transaction>()
+                TransactionHistory = new List<Transactions>()
             };
 
             string userJson = JsonConvert.SerializeObject(user);
@@ -80,13 +80,13 @@ public class Program
             }
             else
             {
-                Console.WriteLine("Incorrect pin code. The application will exit.");
+                Console.WriteLine("Incorrect pin code. The application will exit.\n");
                 Environment.Exit(0);
             }
         }
         else
         {
-            Console.WriteLine("Incorrect card number or expiration date. The application will exit.");
+            Console.WriteLine("Incorrect card number or expiration date. The application will exit.\n");
             Environment.Exit(0);
         }
     }
@@ -106,13 +106,15 @@ public class Program
         switch (option)
         {
             case "1":
-                // TODO: Implement the check balance logic here
+                Console.WriteLine($"Your balance is {user.Balance} GEL.");
+                ShowMenu(user);
                 break;
             case "2":
                 // TODO: Implement the cash out logic here
                 break;
             case "3":
-                // TODO: Implement the view transactions logic here
+                user.getLastFiveTransactions();
+                ShowMenu(user);
                 break;
             case "4":
                 // TODO: Implement the cash in logic here

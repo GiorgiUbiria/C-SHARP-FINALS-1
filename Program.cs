@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Finals;
+﻿using Finals;
 using Newtonsoft.Json; // Nuget Package
 
 public class Program
@@ -66,11 +63,12 @@ public class Program
         switch (option)
         {
             case "1":
-                Console.WriteLine($"Your balance is {user.GetBalance()} GEL.");
+                Console.WriteLine($"Your balance is {user.GetGELBalance()} GEL, {user.GetUSDBalance()} USD, {user.GetEURBalance()} EUR.");
                 ShowMenu(user);
                 break;
             case "2":
-                // TODO: Implement the cash out logic here
+                user.CashOut();
+                ShowMenu(user);
                 break;
             case "3":
                 user.GetLastFiveTransactions();
@@ -85,7 +83,8 @@ public class Program
                 ShowMenu(user);
                 break;
             case "6":
-                // TODO: Implement the convert currency logic here
+                user.Convert();
+                ShowMenu(user);
                 break;
             default:
                 Console.WriteLine("Invalid option. Please try again.");

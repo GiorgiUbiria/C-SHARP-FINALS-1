@@ -32,17 +32,42 @@ public class User
         CardDetails = cardDetails;
         TransactionHistory = new List<Transactions>();
     }
+    
+    public decimal GetGELBalance()
+    {
+        return this.GELBalance;
+    }
+    
+    public decimal GetUSDBalance()
+    {
+        return this.USDBalance;
+    }
+    
+    public decimal GetEURBalance()
+    {
+        return this.EURBalance;
+    }
 
+    public void SaveUser()
+    {
+        string userJson = JsonConvert.SerializeObject(this); 
+        File.WriteAllText("user.json", userJson);
+    }
+    
     public void ChangePinCode()
     {
         Console.WriteLine("Enter the new pin code: ");
         string newPinCode = Console.ReadLine();
-        string oldPinCode = this.CardDetails.getPinCode();
-        this.CardDetails.setPinCode(newPinCode);
-        string userJson = JsonConvert.SerializeObject(this);
-        File.WriteAllText(Globals.jsonFilePath, userJson);
+        
+        string oldPinCode = CardDetails.getPinCode();
+        
+        CardDetails.setPinCode(newPinCode);
+        
+        SaveUser();
+        
         Console.WriteLine($"Your pin code has changed from {oldPinCode} to {this.CardDetails.getPinCode()}");
     }
+    
     public void GetLastFiveTransactions()
     {
         var lastFiveTransactions = this.TransactionHistory.TakeLast(5);
@@ -60,21 +85,15 @@ public class User
             Console.WriteLine();
         }
     }
-    public decimal GetGELBalance()
+
+    public void ShowBalance()
     {
-        return this.GELBalance;
+        Console.WriteLine($"Your balance is {GetGELBalance()} GEL, {GetUSDBalance()} USD, {GetEURBalance()} EUR.");
     }
-    public decimal GetUSDBalance()
+    
+    public bool CheckCardGeneralInformation(string cardNumber, string expirationDate, string cvc)
     {
-        return this.USDBalance;
-    }
-    public decimal GetEURBalance()
-    {
-        return this.EURBalance;
-    }
-    public bool CheckCardGeneralInformation(string cardNumber, string expirationDate)
-    {
-        if (cardNumber == this.CardDetails.getCardNumber() && expirationDate == this.CardDetails.getExpirationDate())
+        if (cardNumber == this.CardDetails.getCardNumber() && expirationDate == this.CardDetails.getExpirationDate() && cvc == this.CardDetails.getCvc())
         {
             return true;
         }
@@ -95,51 +114,120 @@ public class User
             return false;
         }
     }
+    
     public void CashOut()
     {
-        Console.WriteLine("Enter the amount of money you want to cash out:");
-        string input = Console.ReadLine();
+        decimal convertedAmount = 0m;
 
-        Console.WriteLine("Enter the currency type you want to cash in, such as GEL, USD, or EUR:");
-        string currencyType = Console.ReadLine().ToUpper();
-        
-        decimal amountGEL = 0;
-        decimal amountUSD = 0;
-        decimal amountEUR = 0;
-        decimal amount;
-        if (decimal.TryParse(input, out amount) && amount > 0)
+        try
         {
-            if (currencyType == "GEL" && amount <= this.GELBalance)
+            Console.WriteLine("Enter the currency type you want to cash out, such as GEL, USD, or EUR:");
+            string currencyType = Console.ReadLine().ToUpper();
+
+            
+            decimal amountGEL = 0;
+            decimal amountUSD = 0;
+            decimal amountEUR = 0;
+            
+            switch (currencyType)
             {
-                amountGEL = amount;
-                this.GELBalance -= amountGEL;
-                Console.WriteLine($"You have successfully cashed out {amountGEL} GEL.");
-            } else if (currencyType == "USD" && amount <= this.USDBalance)
-            {
-                amountUSD = amount;
-                this.USDBalance -= amountUSD;
-                Console.WriteLine($"You have successfully cashed out {amountUSD} USD.");
-            } else if (currencyType == "EUR" && amount <= this.EURBalance)
-            {
-                amountEUR = amount;
-                this.EURBalance -= amountEUR;
-                Console.WriteLine($"You have successfully cashed out {amountEUR} EUR.");
+                case "GEL":
+                    convertedAmount = GELBalance;
+                    while (true)
+                    {
+                        Console.WriteLine("Enter the amount of money you want to cash out, in GEL:");
+                        string input = Console.ReadLine();
+
+                        if (decimal.TryParse(input, out amountGEL) && amountGEL > 0 && amountGEL <= GELBalance)
+                        {
+                            GELBalance -= amountGEL;
+
+                            Transactions transaction = new Transactions(DateTime.Now, "Cash out", amountGEL, 0, 0);
+
+                            TransactionHistory.Add(transaction);
+
+                            SaveUser();
+                            
+                            Console.WriteLine($"You have successfully cashed out {amountGEL} GEL.");
+                            
+                            ShowBalance();
+
+                            break;
+                        }
+                        else
+                        {
+                            Console.WriteLine("Invalid input. Please enter a positive decimal number that is less than or equal to your balance in GEL.");
+                        }
+                    }
+                    break;
+                case "USD":
+                    convertedAmount = USDBalance;
+                    while (true)
+                    {
+                        Console.WriteLine("Enter the amount of money you want to cash out, in USD:");
+                        string input = Console.ReadLine();
+
+                        if (decimal.TryParse(input, out amountUSD) && amountUSD > 0 && amountUSD <= USDBalance)
+                        {
+                            USDBalance -= amountUSD;
+
+                            Transactions transaction = new Transactions(DateTime.Now, "Cash out", 0, amountUSD, 0);
+
+                            TransactionHistory.Add(transaction);
+                            
+                            SaveUser();
+
+                            Console.WriteLine($"You have successfully cashed out {amountUSD} USD.");
+
+                            ShowBalance();
+                            
+                            break;
+                        }
+                        else
+                        {
+                            Console.WriteLine("Invalid input. Please enter a positive decimal number that is less than or equal to your balance in USD.");
+                        }
+                    }
+                    break;
+                case "EUR":
+                    convertedAmount = EURBalance;
+                    while (true)
+                    {
+                        Console.WriteLine("Enter the amount of money you want to cash out, in EUR:");
+                        string input = Console.ReadLine();
+
+                        if (decimal.TryParse(input, out amountEUR) && amountEUR > 0 && amountEUR <= EURBalance)
+                        {
+                            EURBalance -= amountEUR;
+
+                            Transactions transaction = new Transactions(DateTime.Now, "Cash out", 0, 0, amountEUR);
+
+                            TransactionHistory.Add(transaction);
+
+                            SaveUser();
+
+                            Console.WriteLine($"You have successfully cashed out {amountEUR} EUR.");
+                            
+                            ShowBalance();
+                            
+                            break;
+                        }
+                        else
+                        {
+                            Console.WriteLine("Invalid input. Please enter a positive decimal number that is less than or equal to your balance in EUR.");
+                        }
+                    }
+                    break;
+                default:
+                    throw new Exception("Invalid currency type. Please enter GEL, USD, or EUR.");
             }
-
-            Transactions transaction = new Transactions(DateTime.Now, "Cash out", amountGEL, amountUSD, amountEUR);
-
-            this.TransactionHistory.Add(transaction);
-            string userJson = JsonConvert.SerializeObject(this);
-
-            File.WriteAllText("user.json", userJson);
-
-            Console.WriteLine($"Your new balance is {this.GELBalance} GEL, {this.USDBalance} USD, {this.EURBalance} EUR.");
         }
-        else
+        catch (Exception ex)
         {
-            Console.WriteLine("Invalid input. Please enter a positive decimal number that is less than or equal to your balance.");
+            throw new Exception(ex.Message);
         }
     }
+    
     public void CashIn()
     {
         Console.WriteLine("Enter the currency type you want to cash in, such as GEL, USD, or EUR:");
@@ -151,32 +239,33 @@ public class User
             string input = Console.ReadLine();
 
             decimal amount;
+            
             decimal amountGEL = 0;
             decimal amountUSD = 0;
             decimal amountEUR = 0;
+            
             if (decimal.TryParse(input, out amount) && amount > 0)
             {
                 if (currencyType == "GEL")
                 {
                     amountGEL = amount;
-                    this.GELBalance += amountGEL;
+                    GELBalance += amountGEL;
                 } else if (currencyType == "USD")
                 {
                     amountUSD = amount;
-                    this.USDBalance += amountUSD;
+                    USDBalance += amountUSD;
                 }
                 else
                 {
-                    amountEUR = amount;
-                    this.EURBalance += amountEUR;
+                    amountEUR = amount; EURBalance += amountEUR;
                 }
 
                 Transactions transaction = new Transactions(DateTime.Now, "Cash in", amountGEL, amountUSD, amountEUR);
-
-                this.TransactionHistory.Add(transaction);
-                string userJson = JsonConvert.SerializeObject(this);
-                File.WriteAllText(Globals.jsonFilePath, userJson);
-                Console.WriteLine($"Your new balance is {this.GELBalance} GEL, {this.USDBalance} USD, {this.EURBalance} EUR.");
+                TransactionHistory.Add(transaction);
+                
+                SaveUser();
+                
+                ShowBalance();
             }
             else
             {
@@ -191,90 +280,189 @@ public class User
     
     public void Convert()
     {
-        Console.WriteLine($"Your current balance is {this.GELBalance} GEL, {this.USDBalance} USD, {this.EURBalance} EUR.");
+        ShowBalance();
+        
         Console.WriteLine("Choose from what currency you want convert (GEL/USD/EUR):");
-        string original = Console.ReadLine().ToUpper();
+        string original = GetValidCurrencyInput();
+        
         Console.WriteLine("Choose desired currency (GEL/USD/EUR):");
-        string desired = Console.ReadLine().ToUpper();
-        
-        Console.WriteLine("Enter the amount: ");
-        string amount = Console.ReadLine();
-        
-        decimal money;
-        
-        decimal.TryParse(amount, out money);
+        string desired = GetValidCurrencyInput();
         
         decimal convertedAmount = 0m;
-
+        
         try
         {
             switch (original + desired)
             {
                 case "GELUSD":
-                    convertedAmount = money * 0.30m;
-                    if (GELBalance < money)
+                    decimal money;
+
+                    do
                     {
-                        throw new Exception("Insufficient funds.");
-                    }
-                    GELBalance -= money;
-                    USDBalance += convertedAmount;
-                    Transactions transaction = new Transactions(DateTime.Now, "Convert", money, convertedAmount, 0);
-                    TransactionHistory.Add(transaction);
+                        Console.WriteLine("Enter the amount: ");
+                        string amount = Console.ReadLine();
+
+                        decimal.TryParse(amount, out money);
+
+                        if (GELBalance >= money)
+                        {
+                            convertedAmount = money * Globals.GEL_TO_USD;
+
+                            GELBalance -= money;
+                            USDBalance += convertedAmount;
+
+                            Transactions transaction =
+                                new Transactions(DateTime.Now, "Convert", money, convertedAmount, 0);
+                            TransactionHistory.Add(transaction);
+
+                            break;
+                        }
+                        else
+                        {
+                            Console.WriteLine("Insufficient funds. Try again.");
+                        }
+                    } while (true);
+                
                     break;
                 case "GELEUR":
-                    convertedAmount = money * 0.25m;
-                    if (GELBalance < money)
+                    do
                     {
-                        throw new Exception("Insufficient funds.");
-                    }
-                    GELBalance -= money;
-                    EURBalance += convertedAmount;
-                    transaction = new Transactions(DateTime.Now, "Convert", money, convertedAmount, 0);
-                    TransactionHistory.Add(transaction);
-                    break;
-                case "USDGEL":
-                    convertedAmount = money * 3.33m;
-                    if (USDBalance < money)
-                    {
-                        throw new Exception("Insufficient funds.");
-                    }
-                    USDBalance -= money;
-                    GELBalance += convertedAmount;
-                    transaction = new Transactions(DateTime.Now, "Convert", convertedAmount, money, 0);
-                    TransactionHistory.Add(transaction);
+                        Console.WriteLine("Enter the amount: ");
+                        string amount = Console.ReadLine();
+
+                        decimal.TryParse(amount, out money);
+
+                        if (GELBalance >= money)
+                        {
+                            convertedAmount = money * Globals.GEL_TO_EUR;
+
+                            GELBalance -= money;
+                            EURBalance += convertedAmount;
+
+                            Transactions transaction =
+                                new Transactions(DateTime.Now, "Convert", money, 0, convertedAmount);
+                            TransactionHistory.Add(transaction);
+
+                            break;
+                        }
+                        else
+                        {
+                            Console.WriteLine("Insufficient funds. Try again.");
+                        }
+                    } while (true);
+                
                     break;
                 case "USDEUR":
-                    convertedAmount = money  * 0.85m;
-                    if (USDBalance < money)
+                    do
                     {
-                        throw new Exception("Insufficient funds.");
-                    }
-                    USDBalance -= money;
-                    EURBalance += convertedAmount;
-                    transaction = new Transactions(DateTime.Now, "Convert", 0, money, convertedAmount);
-                    TransactionHistory.Add(transaction);
+                        Console.WriteLine("Enter the amount: ");
+                        string amount = Console.ReadLine();
+
+                        decimal.TryParse(amount, out money);
+
+                        if (USDBalance >= money)
+                        {
+                            convertedAmount = money * Globals.USD_TO_EUR;
+
+                            USDBalance -= money;
+                            EURBalance += convertedAmount;
+
+                            Transactions transaction =
+                                new Transactions(DateTime.Now, "Convert", 0, money, convertedAmount);
+                            TransactionHistory.Add(transaction);
+
+                            break;
+                        }
+                        else
+                        {
+                            Console.WriteLine("Insufficient funds. Try again.");
+                        }
+                    } while (true);
+                
+                    break;
+                case "USDGEL":
+                    do
+                    {
+                        Console.WriteLine("Enter the amount: ");
+                        string amount = Console.ReadLine();
+
+                        decimal.TryParse(amount, out money);
+
+                        if (USDBalance >= money)
+                        {
+                            convertedAmount = money * Globals.USD_TO_GEL;
+
+                            USDBalance -= money;
+                            GELBalance += convertedAmount;
+
+                            Transactions transaction =
+                                new Transactions(DateTime.Now, "Convert", convertedAmount, money, 0);
+                            TransactionHistory.Add(transaction);
+
+                            break;
+                        }
+                        else
+                        {
+                            Console.WriteLine("Insufficient funds. Try again.");
+                        }
+                    } while (true);
+                
                     break;
                 case "EURGEL":
-                    convertedAmount = money * 4.00m;
-                    if (EURBalance < money)
+                    do
                     {
-                        throw new Exception("Insufficient funds.");
-                    }
-                    EURBalance -= money;
-                    GELBalance += convertedAmount;
-                    transaction = new Transactions(DateTime.Now, "Convert", convertedAmount, 0, money);
-                    TransactionHistory.Add(transaction);
+                        Console.WriteLine("Enter the amount: ");
+                        string amount = Console.ReadLine();
+
+                        decimal.TryParse(amount, out money);
+
+                        if (EURBalance >= money)
+                        {
+                            convertedAmount = money * Globals.EUR_TO_GEL;
+
+                            EURBalance -= money;
+                            GELBalance += convertedAmount;
+
+                            Transactions transaction =
+                                new Transactions(DateTime.Now, "Convert", convertedAmount, 0, money);
+                            TransactionHistory.Add(transaction);
+
+                            break;
+                        }
+                        else
+                        {
+                            Console.WriteLine("Insufficient funds. Try again.");
+                        }
+                    } while (true);
+                
                     break;
                 case "EURUSD":
-                    convertedAmount = money * 1.18m;
-                    if (EURBalance < money)
+                    do
                     {
-                        throw new Exception("Insufficient funds.");
-                    }
-                    EURBalance -= money;
-                    USDBalance += convertedAmount;
-                    transaction = new Transactions(DateTime.Now, "Convert", 0, convertedAmount, money);
-                    TransactionHistory.Add(transaction);
+                        Console.WriteLine("Enter the amount: ");
+                        string amount = Console.ReadLine();
+
+                        decimal.TryParse(amount, out money);
+
+                        if (EURBalance >= money)
+                        {
+                            convertedAmount = money * Globals.EUR_TO_USD;
+
+                            EURBalance -= money;
+                            USDBalance += convertedAmount;
+
+                            Transactions transaction =
+                                new Transactions(DateTime.Now, "Convert", 0, convertedAmount, money);
+                            TransactionHistory.Add(transaction);
+
+                            break;
+                        }
+                        else
+                        {
+                            Console.WriteLine("Insufficient funds. Try again.");
+                        }
+                    } while (true);
+                
                     break;
                 default:
                     throw new Exception("Invalid currency types.");
@@ -285,9 +473,22 @@ public class User
             throw new Exception(ex.Message);
         }
         
-        string userJson = JsonConvert.SerializeObject(this);
-        File.WriteAllText(Globals.jsonFilePath, userJson);
-        Console.WriteLine("Successful convertion of funds!");
-        Console.WriteLine($"Your current balance is {this.GELBalance} GEL, {this.USDBalance} USD, {this.EURBalance} EUR.");
+        SaveUser();
+        
+        ShowBalance();
+    }
+    
+    private string GetValidCurrencyInput()
+    {
+        string currency;
+
+        do
+        {
+            Console.WriteLine("Enter a valid currency (GEL/USD/EUR):");
+            currency = Console.ReadLine().ToUpper();
+
+        } while (currency != "GEL" && currency != "USD" && currency != "EUR");
+
+        return currency;
     }
 }

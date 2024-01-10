@@ -38,4 +38,9 @@ public class CardDetails
     {
         return this.CardNumber;
     }
+
+    public string getCvc()
+    {
+        return this.CVC;
+    }
 }

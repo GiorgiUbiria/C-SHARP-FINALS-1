@@ -1,11 +1,14 @@
 ﻿using System.Linq;
 using System.Transactions;
 using Newtonsoft.Json;
+using NLog;
 
 namespace Finals;
 
 public class User
 {
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
     [JsonProperty("FirstName")]
     private string FirstName { get; set; }
     [JsonProperty("LastName")]
@@ -31,6 +34,8 @@ public class User
         EURBalance = 0;
         CardDetails = cardDetails;
         TransactionHistory = new List<Transactions>();
+        
+        Logger.Info($"User {FirstName} {LastName} created with card details: {cardDetails}");
     }
     
     public decimal GetGELBalance()
@@ -50,12 +55,16 @@ public class User
 
     public void SaveUser()
     {
+        Logger.Info($"Saving the User {FirstName} {LastName} account details.");
+        
         string userJson = JsonConvert.SerializeObject(this); 
         File.WriteAllText("user.json", userJson);
     }
     
     public void ChangePinCode()
     {
+        Logger.Info($"User {FirstName} {LastName} changing pin code.");
+
         Console.WriteLine("Enter the new pin code: ");
         string newPinCode = Console.ReadLine();
         
@@ -66,10 +75,14 @@ public class User
         SaveUser();
         
         Console.WriteLine($"Your pin code has changed from {oldPinCode} to {this.CardDetails.getPinCode()}");
+        
+        Logger.Info($"User {FirstName} {LastName} changed pin code from {oldPinCode} to {CardDetails.getPinCode()}");
     }
     
     public void GetLastFiveTransactions()
     {
+        Logger.Info($"User {FirstName} {LastName} viewing last five transactions.");
+
         var lastFiveTransactions = this.TransactionHistory.TakeLast(5);
         if (!lastFiveTransactions.Any())
         {
@@ -88,6 +101,8 @@ public class User
 
     public void ShowBalance()
     {
+        Logger.Info($"User {FirstName} {LastName} checking balance. Balance: {GetGELBalance()} GEL, {GetUSDBalance()} USD, {GetEURBalance()} EUR.");
+
         Console.WriteLine($"Your balance is {GetGELBalance()} GEL, {GetUSDBalance()} USD, {GetEURBalance()} EUR.");
     }
     
@@ -117,6 +132,8 @@ public class User
     
     public void CashOut()
     {
+        Logger.Info($"User {FirstName} {LastName} performing cash out.");
+        
         decimal convertedAmount = 0m;
 
         try
@@ -230,6 +247,8 @@ public class User
     
     public void CashIn()
     {
+        Logger.Info($"User {FirstName} {LastName} performing cash in.");
+
         Console.WriteLine("Enter the currency type you want to cash in, such as GEL, USD, or EUR:");
         string currencyType = Console.ReadLine().ToUpper();
 
@@ -280,6 +299,8 @@ public class User
     
     public void Convert()
     {
+        Logger.Info($"User {FirstName} {LastName} converting currency.");
+
         ShowBalance();
         
         Console.WriteLine("Choose from what currency you want convert (GEL/USD/EUR):");
